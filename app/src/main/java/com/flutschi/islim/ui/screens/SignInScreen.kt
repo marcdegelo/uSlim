@@ -5,7 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -39,12 +37,14 @@ fun LoginScreen(navController: NavController) {
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        AuthUtils.handleGoogleSignInResult(
-            resultIntent = result.data,
-            context = context,
-            navController = navController,
-            coroutineScope = coroutineScope
-        )
+        coroutineScope.launch { // <--- ADD THIS LINE
+            AuthUtils.handleGoogleSignInResult(
+                resultIntent = result.data,
+                context = context,
+                navController = navController,
+                coroutineScope = coroutineScope // Pass the existing scope
+            )
+        } // <--- AND THIS CLOSING BRACE
     }
 
     Column(
@@ -96,7 +96,7 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         BlackButton(
-            text = "Login",
+            text = "Sign In",
             onClick = {
                 coroutineScope.launch {
                     loginUser(email, password, context, navController)
@@ -104,24 +104,7 @@ fun LoginScreen(navController: NavController) {
             }
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Don't have an account?",
-            fontSize = 14.sp,
-            color = AppColors.placeholderColor
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TextButton(onClick = { navController.navigate("signup") }) {
-            Text(
-                text = "Sign up here",
-                color = AppColors.gradientEnd,
-                fontSize = 14.sp
-            )
-        }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         Row(
             modifier = Modifier
@@ -136,6 +119,22 @@ fun LoginScreen(navController: NavController) {
                 googleSignInLauncher = { googleSignInLauncher.launch(googleSignInClient.signInIntent) }
             )
 
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Don't have an account?",
+            fontSize = 14.sp,
+            color = AppColors.placeholderColor
+        )
+
+        TextButton(onClick = { navController.navigate("signup") }) {
+            Text(
+                text = "Sign up",
+                color = AppColors.gradientEnd,
+                fontSize = 14.sp
+            )
         }
     }
 }
